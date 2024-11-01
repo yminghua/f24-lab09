@@ -2,10 +2,10 @@ import { ImageAnnotatorClient } from '@google-cloud/vision';
 
 const client = new ImageAnnotatorClient();
 
-function detectFace(fileName: string) {
-    console.log(`Running logo detection on ${fileName}`);
-    client.logoDetection(fileName)
-    .then(([result]) => {
+async function detectFace(fileName: string) {
+    try {
+        console.log(`Running logo detection on ${fileName}`);
+        const [result] = await client.logoDetection(fileName);
         let scores: number[] = [];
         const logos = result.logoAnnotations;
         logos?.forEach((logo) => {
@@ -16,11 +16,10 @@ function detectFace(fileName: string) {
         });
         const avg = scores.reduce((a, b) => a + b) / scores.length;
         console.log(`Average score for ${fileName}: ${avg}`);
-    })
-    .catch((err) => {
+    } catch (err: any) {
         if (err.code == 'ENOENT')
             console.error(`File ${fileName} not found`);
-    });
+    }
 }
 
 /**
@@ -55,9 +54,14 @@ function main (fileNames: string[]): void {
 
 // Implement the async version of the above here
 // Your version should not use .then and should use try/catch instead of .catch
-async function mainAsync(fileNames: string[]): Promise<void> {
-    console.error(new Error("mainAsync not implemented"));
-    // Your code here
+function mainAsync(fileNames: string[]) {
+    fileNames.forEach(async (fileName: string) => {
+        try {
+            await detectFace(fileName);
+        } catch (error) {
+            console.error(`Error detecting logo in ${fileName}`);
+        }
+    })
 }
 
 main([
@@ -66,8 +70,8 @@ main([
     './images/not-a-file.jpg'
 ]);
 
-// Sleep for a second
-await new Promise(r => setTimeout(r, 1000));
+// Sleep for 5 seconds
+await new Promise(r => setTimeout(r, 5000));
 
 mainAsync([
     './images/cmu.jpg', 
